@@ -12,6 +12,8 @@ export default function Home() {
   const [creatorCode, setCreatorCode] = useState("");
   const [creatorId, setCreatorId] = useState("");
   const [showDialog, setShowDialog] = useState(false);
+  const [teamName, setTeamName] = useState("");
+
   const handleCreatorLogin = () => {
     console.log("button clicked")
     const isCodeTrue = process.env.NEXT_PUBLIC_CREATOR_CODE === creatorCode;
@@ -22,33 +24,48 @@ export default function Home() {
     }
   }
   const handleSubmit = async () => {
+    if (!teamName.trim()) {
+      alert("Please enter your team name");
+      return;
+    }
+
     try {
-      console.log("Submitted Room Name:", `"${roomId}"`);
-      console.log("Submitted Room Code:", `"${roomCode}"`);
+      const resRooms = await fetch("/api/admin/getallrooms");
+      const rooms = await resRooms.json();
 
-      const res = await fetch("/api/admin/getallrooms");
-      const rooms = await res.json();
-      console.log("Rooms from API:", rooms);
-
-      // Match by name and password
       const room = rooms.find(
         (r) =>
-          r.name.trim().toLowerCase() === roomId.trim().toLowerCase() && // match name
-          r.password.trim() === roomCode.trim()                            // match password
+          r.name.trim().toLowerCase() === roomId.trim().toLowerCase() &&
+          r.password.trim() === roomCode.trim()
       );
 
-      console.log("Matched Room:", room);
-
-      if (room) {
-        router.push(`/quiz/${room.id}`); // redirect to that room's page
-      } else {
+      if (!room) {
         alert("Invalid Room Name or Room Code");
+        return;
       }
+
+      // Create or get the team in DB
+      const resTeam = await fetch("/api/participant/createteam", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamName, roomId: room.id }),
+      });
+
+      const team = await resTeam.json();
+      if (!team.id) {
+        alert("Failed to create/get team");
+        return;
+      }
+
+      // Pass team info to Quiz page
+      router.push(`/quiz/${room.id}?teamId=${team.id}&teamName=${encodeURIComponent(team.name)}`);
+
     } catch (err) {
       console.error(err);
       alert("Something went wrong. Try again.");
     }
   };
+
 
 
 
@@ -101,7 +118,7 @@ export default function Home() {
           {/* ID Input */}
           <input
             type="text"
-            placeholder="Enter your ID"
+            placeholder="Enter Room name"
             className="m-4 p-4 col-span-6"
             onChange={(e) => setRoomId(e.target.value)}
           />
@@ -113,6 +130,15 @@ export default function Home() {
             className="m-4 p-4 col-span-6"
             onChange={(e) => setRoomCode(e.target.value)}
           />
+          {/* Team Name Input */}
+          <input
+            type="text"
+            placeholder="Enter your Team Name"
+            className="m-4 p-4 col-span-12"
+            value={teamName}
+            onChange={(e) => setTeamName(e.target.value)}
+          />
+
 
           {/* Join Button */}
           <button

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 export default function Quiz() {
     const params = useParams();
@@ -11,6 +11,11 @@ export default function Quiz() {
     const [index, setIndex] = useState(0);
     const [loading, setLoading] = useState(false);
     const [waitMessage, setWaitMessage] = useState(false);
+    const searchParams = useSearchParams();
+
+    const teamId = searchParams.get("teamId");
+    const teamName = searchParams.get("teamName");
+    console.log(teamName)
 
     const fetchQuestion = async (qIndex) => {
         if (!roomId) return; // safety check
@@ -36,28 +41,57 @@ export default function Quiz() {
     };
 
     useEffect(() => {
-        // Fetch the current question immediately
         fetchQuestion(index);
 
-        // Only set up polling if we are waiting for host to create the question
-        if (!waitMessage) return;
+        if (!waitMessage) return; // only poll if waiting
 
         const interval = setInterval(() => {
             fetchQuestion(index);
         }, 8000);
 
-        // Clean up interval when component unmounts or waitMessage changes
         return () => clearInterval(interval);
     }, [index, waitMessage, roomId]);
 
 
-    const handleSubmit = () => {
-        if (selected !== null) {
-            console.log("Selected Option:", question.options[selected]);
-        } else {
+
+    const handleSubmit = async () => {
+        if (selected === null) {
             console.log("No option selected");
+            return;
+        }
+
+        try {
+            const answerGiven = question.options[selected];
+
+            const res = await fetch("/api/participant/submitanswer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    roomId,
+                    questionId: question.id,
+                    teamName,  // from query param or state
+                    answerGiven,
+                }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                console.error("Submit error:", err.error);
+                return;
+            }
+
+            const data = await res.json();
+            console.log("Answer submitted:", data);
+
+            // ✅ Automatically move to next question after successful submit
+            setSelected(null);
+            setIndex((prev) => prev + 1);
+
+        } catch (err) {
+            console.error("Error submitting answer:", err);
         }
     };
+
 
     const handleNext = () => {
         setSelected(null);

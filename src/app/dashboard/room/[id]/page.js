@@ -1,20 +1,32 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation"; // <-- import this
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import AddQuestionDialog from "../../../../components/AddQuestionDialog";
 
 export default function RoomDashboard() {
-    const params = useParams(); // returns an object of route params
-    const roomId = params.id;   // 'id' comes from [id] in folder name
+    const params = useParams();
+    const roomId = params.id;
 
-    console.log(roomId); // now it will log correctly
     const [showDialog, setShowDialog] = useState(false);
-    const [questions, setQuestions] = useState([]);
+    const [questionsData, setQuestionsData] = useState([]);
 
     const handleQuestionAdded = (q) => {
-        setQuestions([...questions, q]);
+        setQuestionsData([...questionsData, { ...q, responses: [] }]);
     };
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const res = await fetch(`/api/admin/getroomdata?roomId=${roomId}`);
+                const data = await res.json();
+                setQuestionsData(data);
+            } catch (err) {
+                console.error("Error fetching room data:", err);
+            }
+        }
+        fetchData();
+    }, [roomId]);
 
     return (
         <div className="p-6">
@@ -35,18 +47,45 @@ export default function RoomDashboard() {
                 />
             )}
 
-            <div>
-                {questions.map((q, idx) => (
-                    <div key={idx} className="border p-3 rounded mb-2">
-                        <p className="font-semibold">{q.question}</p>
-                        <ul className="list-disc list-inside">
-                            {Array.isArray(q.options) && q.options.map((opt, i) => (
-                                <li key={i}>{opt}</li>
-                            ))}
-                        </ul>
-                        <p className="text-green-600">Correct Answer: {q.correctAnswer}</p>
-                    </div>
-                ))}
+            <div className="overflow-x-auto mt-6">
+                <table className="min-w-full bg-gray-900 text-white border border-gray-700">
+                    <thead className="bg-gray-800">
+                        <tr>
+                            <th className="px-4 py-2 border border-gray-700">Question</th>
+                            <th className="px-4 py-2 border border-gray-700">Team Name</th>
+                            <th className="px-4 py-2 border border-gray-700">Response</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {questionsData.map((q) => {
+                            if (!q.responses || q.responses.length === 0) {
+                                return (
+                                    <tr key={q.id} className="hover:bg-gray-800">
+                                        <td className="px-4 py-2 border border-gray-700">{q.question}</td>
+                                        <td className="px-4 py-2 border border-gray-700" colSpan={2}>
+                                            No responses yet
+                                        </td>
+                                    </tr>
+                                );
+                            }
+
+                            return q.responses.map((resp, idx) => (
+                                <tr key={`${q.id}-${idx}`} className="hover:bg-gray-800">
+                                    {idx === 0 && (
+                                        <td
+                                            className="px-4 py-2 border border-gray-700"
+                                            rowSpan={q.responses.length}
+                                        >
+                                            {q.question}
+                                        </td>
+                                    )}
+                                    <td className="px-4 py-2 border border-gray-700">{resp.teamName}</td>
+                                    <td className="px-4 py-2 border border-gray-700">{resp.answerGiven}</td>
+                                </tr>
+                            ));
+                        })}
+                    </tbody>
+                </table>
             </div>
         </div>
     );

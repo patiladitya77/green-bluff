@@ -24,7 +24,8 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx",
-    "src/app/dashboard/room/[id]/page.js"
+    "src/app/dashboard/room/[id]/page.js",
+    "src/app/api/admin/getroomdata/route.js"
   ],
   "exclude": ["node_modules"]
 }

@@ -47,7 +47,6 @@ model Question {
 
 model Feedback {
   id          Int      @id @default(autoincrement())
-  teamName    String   // ← can remove later once Team is linked
   answerGiven String
 
   teamId      Int
