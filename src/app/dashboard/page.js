@@ -1,12 +1,19 @@
 "use client"
 
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function Dashboard() {
     const [showDialog, setShowDialog] = useState(false);
     const [groupName, setGroupName] = useState("");
     const [roomPassword, setRoomPassword] = useState("");
+    const router = useRouter();
     const [rooms, setRooms] = useState([]);
+    const handleEnterRoom = (roomId) => {
+        console.log(roomId)
+        router.push(`/dashboard/room/${roomId}`);
+    };
+
 
     async function fetchRooms() {
         try {
@@ -78,7 +85,11 @@ export default function Dashboard() {
                     </thead>
                     <tbody>
                         {rooms.map((room) => (
-                            <tr key={room.id} className="hover:bg-gray-800">
+                            <tr
+                                key={room.id}
+                                className="hover:bg-gray-800 cursor-pointer"
+                                onClick={() => handleEnterRoom(room.id)} // Redirect on click
+                            >
                                 <td className="px-4 py-2 border border-gray-700">{room.id}</td>
                                 <td className="px-4 py-2 border border-gray-700">{room.name}</td>
                                 <td className="px-4 py-2 border border-gray-700">{room.password}</td>
@@ -88,6 +99,7 @@ export default function Dashboard() {
                             </tr>
                         ))}
                     </tbody>
+
                 </table>
             </div>
 
