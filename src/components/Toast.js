@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, CheckCircle } from "lucide-react"; // for icons
+import { X, CheckCircle } from "lucide-react";
 
 const Toast = ({ message, duration, onClose }) => {
     const [progress, setProgress] = useState("100%");

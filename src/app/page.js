@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Toast from '../components/Toast'; // make sure path is correct
 
 export default function Home() {
   const router = useRouter();
@@ -12,7 +13,10 @@ export default function Home() {
   const [creatorId, setCreatorId] = useState("");
   const [showDialog, setShowDialog] = useState(false);
   const [teamName, setTeamName] = useState("");
-  const [loading, setLoading] = useState(false); // 👈 loader state
+  const [loading, setLoading] = useState(false);
+
+  // Toast state
+  const [toast, setToast] = useState({ message: "", show: false });
 
   const handleCreatorLogin = () => {
     const isCodeTrue = process.env.NEXT_PUBLIC_CREATOR_CODE === creatorCode;
@@ -20,16 +24,17 @@ export default function Home() {
       router.push("/dashboard");
     } else {
       console.log("Invalid creator code");
+      setToast({ message: "Invalid creator code", show: true });
     }
   };
 
   const handleSubmit = async () => {
     if (!teamName.trim()) {
-      alert("Please enter your team name");
+      setToast({ message: "Please enter your team name", show: true });
       return;
     }
 
-    setLoading(true); // 👈 start loader
+    setLoading(true);
     try {
       const resRooms = await fetch("/api/admin/getallrooms");
       const rooms = await resRooms.json();
@@ -41,7 +46,7 @@ export default function Home() {
       );
 
       if (!room) {
-        alert("Invalid Room Name or Room Code");
+        setToast({ message: "Invalid Room Name or Room Code", show: true });
         setLoading(false);
         return;
       }
@@ -54,17 +59,19 @@ export default function Home() {
 
       const team = await resTeam.json();
       if (!team.id) {
-        alert("Failed to create/get team");
+        setToast({ message: "Failed to create/get team", show: true });
         setLoading(false);
         return;
       }
+
+      setToast({ message: "Successfully joined the room!", show: true });
 
       router.push(
         `/quiz/${room.id}?teamId=${team.id}&teamName=${encodeURIComponent(team.name)}`
       );
     } catch (err) {
       console.error(err);
-      alert("Something went wrong. Try again.");
+      setToast({ message: "Something went wrong. Try again.", show: true });
     } finally {
       setLoading(false);
     }
@@ -159,6 +166,17 @@ export default function Home() {
           </button>
         </form>
       </div>
+
+      {/* Toast on top-right */}
+      {toast.show && (
+        <div className="fixed top-4 right-4 z-50">
+          <Toast
+            message={toast.message}
+            duration={3000}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        </div>
+      )}
     </div>
   );
 }

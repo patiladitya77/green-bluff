@@ -2,24 +2,27 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import Toast from '../../../components/Toast'; // Adjust path to your Toast component
 
 export default function Quiz() {
     const params = useParams();
     const roomId = params.id;
+
     const [question, setQuestion] = useState(null);
     const [selected, setSelected] = useState(null);
     const [index, setIndex] = useState(0);
     const [loading, setLoading] = useState(false);
     const [waitMessage, setWaitMessage] = useState(false);
-    const searchParams = useSearchParams();
     const [submitting, setSubmitting] = useState(false);
 
+    // Toast state
+    const [toast, setToast] = useState({ message: "", show: false });
 
+    const searchParams = useSearchParams();
     const teamId = searchParams.get("teamId");
     const teamName = searchParams.get("teamName");
-    console.log(teamName)
 
-    const fetchQuestion = async (qIndex) => {
+    const fetchQuestion = async () => {
         if (!roomId) return;
         setLoading(true);
         try {
@@ -46,25 +49,22 @@ export default function Quiz() {
         }
     };
 
-
     useEffect(() => {
-        fetchQuestion(index);
+        fetchQuestion();
 
         const interval = setInterval(() => {
             if (waitMessage) {
-                fetchQuestion(index);
+                fetchQuestion();
             }
         }, 8000);
 
         return () => clearInterval(interval);
     }, [index, waitMessage, roomId]);
 
-
-
-
     const handleSubmit = async () => {
         if (selected === null) {
-            console.log("No option selected");
+            // Show toast if no option selected
+            setToast({ message: "Please select an option!", show: true });
             return;
         }
 
@@ -85,40 +85,28 @@ export default function Quiz() {
 
             if (!res.ok) {
                 const err = await res.json();
-                console.error("Submit error:", err.error);
+                setToast({ message: err.error || "Failed to submit answer", show: true });
                 return;
             }
 
-            const data = await res.json();
-            console.log("Answer submitted:", data);
+            setToast({ message: "Answer submitted successfully!", show: true });
 
             setSelected(null);
-            setIndex((prev) => prev + 1);
+            setIndex(prev => prev + 1); // triggers fetch of next question
         } catch (err) {
             console.error("Error submitting answer:", err);
+            setToast({ message: "Error submitting answer", show: true });
         } finally {
             setSubmitting(false);
         }
     };
-
-
-
-    // const handleNext = () => {
-    //     setNexting(true);
-    //     setTimeout(() => {
-    //         setSelected(null);
-    //         setIndex((prev) => prev + 1);
-    //         setNexting(false);
-    //     }, 500); // just simulate small delay
-    // };
-
 
     return (
         <div className="min-h-screen bg-black flex items-center justify-center p-4">
             <div className="bg-gray-900 text-white rounded-2xl shadow-lg w-full max-w-md p-6 flex flex-col">
                 {loading && <p className="text-center text-gray-400 mb-4">Loading...</p>}
 
-                {waitMessage && (
+                {waitMessage && !loading && (
                     <p className="text-center text-yellow-400 mb-4">
                         Wait for host to create question
                     </p>
@@ -135,8 +123,8 @@ export default function Quiz() {
                                     key={idx}
                                     onClick={() => setSelected(idx)}
                                     className={`w-full py-3 px-4 rounded-xl text-base transition text-left ${selected === idx
-                                        ? "bg-blue-600"
-                                        : "bg-gray-800 hover:bg-gray-700"
+                                            ? "bg-blue-600"
+                                            : "bg-gray-800 hover:bg-gray-700"
                                         }`}
                                 >
                                     {opt}
@@ -147,27 +135,28 @@ export default function Quiz() {
                             <button
                                 onClick={handleSubmit}
                                 disabled={submitting}
-                                className={`flex-1 cursor-pointer py-3 rounded-xl text-base font-semibold transition 
-            ${submitting ? "bg-gray-600 cursor-not-allowed" : "bg-green-600 hover:bg-green-500"}
-        `}
+                                className={`flex-1 py-3 rounded-xl text-base font-semibold transition ${submitting
+                                        ? "bg-gray-600 cursor-not-allowed"
+                                        : "bg-green-600 hover:bg-green-500"
+                                    }`}
                             >
                                 {submitting ? "Submitting..." : "Submit"}
                             </button>
-
-                            {/* <button
-                                onClick={handleNext}
-                                disabled={nexting}
-                                className={`flex-1 py-3 rounded-xl text-base font-semibold transition 
-            ${nexting ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500"}
-        `}
-                            >
-                                {nexting ? "Loading..." : "Next"}
-                            </button> */}
                         </div>
-
                     </>
                 )}
             </div>
+
+            {/* Toast */}
+            {toast.show && (
+                <div className="fixed top-4 right-4 z-50">
+                    <Toast
+                        message={toast.message}
+                        duration={3000}
+                        onClose={() => setToast({ ...toast, show: false })}
+                    />
+                </div>
+            )}
         </div>
     );
 }
