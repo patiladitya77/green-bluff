@@ -20,29 +20,26 @@ model Room {
   name                 String?
   password             String?
   currentQuestionIndex Int?
-  
+
   questions            Question[]
   feedbacks            Feedback[]
-  teams                Team[]        // 👈 Add this
+  teams                Team[]
 
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 }
 
-
-
-
 model Question {
-  id           Int       @id @default(autoincrement())
-  question     String
-  options      String[]  // Postgres supports text[] type
+  id            Int        @id @default(autoincrement())
+  question      String
+  options       String[]
   correctAnswer String
 
-  roomId       Int
-  room         Room      @relation(fields: [roomId], references: [id])
+  roomId        Int
+  room          Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  feedbacks    Feedback[]
-  createdAt    DateTime  @default(now())
+  feedbacks     Feedback[]
+  createdAt     DateTime   @default(now())
 }
 
 model Feedback {
@@ -50,23 +47,22 @@ model Feedback {
   answerGiven String
 
   teamId      Int
-  team        Team     @relation(fields: [teamId], references: [id])
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   questionId  Int
-  question    Question @relation(fields: [questionId], references: [id])
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   roomId      Int
-  room        Room     @relation(fields: [roomId], references: [id])
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now())
 }
 
 model Team {
-  id        Int      @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   name      String
   roomId    Int
-  room      Room     @relation(fields: [roomId], references: [id]) // ✅ opposite is Room.teams
+  room      Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
   feedbacks Feedback[]
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
 }
-

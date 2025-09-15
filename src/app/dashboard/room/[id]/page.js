@@ -38,6 +38,33 @@ export default function RoomDashboard() {
             >
                 Add Question
             </button>
+            <button
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 mb-4 ml-2"
+                onClick={async () => {
+                    if (!confirm("Are you sure you want to delete this room? This will remove all questions and responses.")) {
+                        return;
+                    }
+                    try {
+                        const res = await fetch(`/api/admin/deleteroom?roomId=${roomId}`, {
+                            method: "DELETE",
+                        });
+                        if (res.ok) {
+                            alert("Room deleted successfully!");
+                            window.location.href = "/"; // redirect to home/dashboard
+                        } else {
+                            const err = await res.json().catch(() => ({})); // avoid JSON parse error
+                            alert("Error deleting room: " + (err.message || "Unknown error"));
+                        }
+                    } catch (error) {
+                        console.error("Error deleting room:", error);
+                        alert("Something went wrong.");
+                    }
+                }}
+
+            >
+                Delete Room
+            </button>
+
 
             {showDialog && (
                 <AddQuestionDialog

@@ -107,19 +107,28 @@ export default function Home() {
 
       </div>}
       <div className="flex justify-between">
-        <p className="my-2 mx-2">Are you a creater?</p>
-        <button className="bg-blue-600 rounded-md px-2 my-2 cursor-pointer text-black" onClick={() => setShowDialog(true)}>Enter creator mode</button>
+        <p className="hidden md:block md:my-2 mx-2">
+          Are you a creator?
+        </p>
+
+        <button
+          className="hidden md:block bg-blue-600 text-white py-2 mx-2 rounded-md px-2 my-2 cursor-pointer "
+          onClick={() => setShowDialog(true)}
+        >
+          Enter creator mode
+        </button>
+
       </div>
-      <div className="pt-[35%] md:pt-[10%] flex justify-center">
+      <div className="pt-[35%] md:pt-[10%] flex justify-center px-4">
         <form
-          className="w-full md:w-1/2 bg-white rounded-md text-gray-600 grid grid-cols-12"
+          className="w-full max-w-sm md:w-1/2 bg-white rounded-md text-gray-600 grid grid-cols-12"
           onSubmit={(e) => e.preventDefault()}
         >
           {/* ID Input */}
           <input
             type="text"
             placeholder="Enter Room name"
-            className="m-4 p-4 col-span-6"
+            className="m-4 p-1 text-md col-span-6"
             onChange={(e) => setRoomId(e.target.value)}
           />
 
@@ -127,9 +136,10 @@ export default function Home() {
           <input
             type="text"
             placeholder="Enter room code"
-            className="m-4 p-4 col-span-6"
+            className="m-4 p-1 col-span-6"
             onChange={(e) => setRoomCode(e.target.value)}
           />
+
           {/* Team Name Input */}
           <input
             type="text"
@@ -138,7 +148,6 @@ export default function Home() {
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
           />
-
 
           {/* Join Button */}
           <button
@@ -149,6 +158,7 @@ export default function Home() {
           </button>
         </form>
       </div>
+
 
     </div>
   );
