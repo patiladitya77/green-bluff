@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../../../lib/prisma";
 
 // POST /api/createroom
+
+
 export async function POST(req) {
     try {
         const body = await req.json();
 
+        // Validate inputs
+        if (!body.name || !body.password) {
+            return NextResponse.json(
+                { error: "Room name and password are required" },
+                { status: 400 }
+            );
+        }
+
         const room = await prisma.room.create({
             data: {
+                name: body.name,
+                password: body.password,
                 currentQuestionIndex: body.currentQuestionIndex ?? 0,
             },
             include: {
@@ -25,3 +37,4 @@ export async function POST(req) {
         );
     }
 }
+

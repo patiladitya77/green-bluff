@@ -17,13 +17,20 @@ datasource db {
 
 model Room {
   id                   Int         @id @default(autoincrement())
-  questions            Question[]
+  name                 String?
+  password             String?
   currentQuestionIndex Int?
-
+  
+  questions            Question[]
   feedbacks            Feedback[]
+  teams                Team[]        // 👈 Add this
+
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 }
+
+
+
 
 model Question {
   id           Int       @id @default(autoincrement())
@@ -40,8 +47,11 @@ model Question {
 
 model Feedback {
   id          Int      @id @default(autoincrement())
-  teamName    String
+  teamName    String   // ← can remove later once Team is linked
   answerGiven String
+
+  teamId      Int
+  team        Team     @relation(fields: [teamId], references: [id])
 
   questionId  Int
   question    Question @relation(fields: [questionId], references: [id])
@@ -51,3 +61,13 @@ model Feedback {
 
   createdAt   DateTime @default(now())
 }
+
+model Team {
+  id        Int      @id @default(autoincrement())
+  name      String
+  roomId    Int
+  room      Room     @relation(fields: [roomId], references: [id]) // ✅ opposite is Room.teams
+  feedbacks Feedback[]
+  createdAt DateTime @default(now())
+}
+
