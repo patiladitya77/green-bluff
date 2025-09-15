@@ -8,7 +8,7 @@ export async function GET() {
             select: {
                 id: true,
                 name: true,
-                password: true, // ⚠️ don’t expose in real apps
+                password: true,
                 createdAt: true,
             },
         });
