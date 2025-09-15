@@ -21,7 +21,8 @@ export default function Quiz() {
         if (!roomId) return; // safety check
         setLoading(true);
         try {
-            const res = await fetch(`/api/participant/getnextquestion?roomId=${roomId}&index=${qIndex}`);
+            const res = await fetch(`/api/participant/getnextquestion?roomId=${roomId}&teamId=${teamId}`);
+
             if (res.ok) {
                 const data = await res.json();
                 setQuestion(data);

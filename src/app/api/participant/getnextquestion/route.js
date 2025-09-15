@@ -5,28 +5,41 @@ export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
         const roomId = parseInt(searchParams.get("roomId"));
-        const index = parseInt(searchParams.get("index"));
+        const teamId = parseInt(searchParams.get("teamId")); // 👈 identify team
 
-        if (isNaN(roomId) || isNaN(index)) {
-            return NextResponse.json({ error: "Invalid roomId or index" }, { status: 400 });
+        if (isNaN(roomId) || isNaN(teamId)) {
+            return NextResponse.json(
+                { error: "Missing or invalid roomId/teamId" },
+                { status: 400 }
+            );
         }
 
-        const room = await prisma.room.findUnique({
-            where: { id: roomId },
-            include: { questions: true },
+        // Get all questions for this room in order
+        const questions = await prisma.question.findMany({
+            where: { roomId },
+            orderBy: { id: "asc" },
         });
 
-        if (!room) {
-            return NextResponse.json({ error: "Room not found" }, { status: 404 });
+        if (questions.length === 0) {
+            return NextResponse.json({ error: "No questions in this room" }, { status: 404 });
         }
 
-        const nextQuestion = room.questions[index];
+        // Get all questions this team has already answered
+        const answered = await prisma.feedback.findMany({
+            where: { roomId, teamId },
+            select: { questionId: true },
+        });
+
+        const answeredIds = new Set(answered.map(f => f.questionId));
+
+        // Find the first unanswered question
+        const nextQuestion = questions.find(q => !answeredIds.has(q.id));
 
         if (!nextQuestion) {
-            return NextResponse.json({ error: "No question at this index" }, { status: 404 });
+            return NextResponse.json({ message: "No more questions" }, { status: 404 });
         }
 
-        return NextResponse.json(nextQuestion);
+        return NextResponse.json(nextQuestion, { status: 200 });
     } catch (err) {
         console.error("GetNextQuestion API Error:", err);
         return NextResponse.json({ error: err.message }, { status: 500 });
