@@ -5,32 +5,37 @@ import { useParams, useSearchParams } from "next/navigation";
 
 export default function Quiz() {
     const params = useParams();
-    const roomId = params.id; // [id] folder → params.id
+    const roomId = params.id;
     const [question, setQuestion] = useState(null);
     const [selected, setSelected] = useState(null);
     const [index, setIndex] = useState(0);
     const [loading, setLoading] = useState(false);
     const [waitMessage, setWaitMessage] = useState(false);
     const searchParams = useSearchParams();
+    const [submitting, setSubmitting] = useState(false);
+
 
     const teamId = searchParams.get("teamId");
     const teamName = searchParams.get("teamName");
     console.log(teamName)
 
     const fetchQuestion = async (qIndex) => {
-        if (!roomId) return; // safety check
+        if (!roomId) return;
         setLoading(true);
         try {
             const res = await fetch(`/api/participant/getnextquestion?roomId=${roomId}&teamId=${teamId}`);
-
             if (res.ok) {
                 const data = await res.json();
-                setQuestion(data);
-                console.log(data)
-                setWaitMessage(false);
+                if (data) {
+                    setQuestion(data);
+                    setWaitMessage(false);
+                } else {
+                    setQuestion(null);
+                    setWaitMessage(true);
+                }
             } else if (res.status === 404) {
-                setWaitMessage(true);
                 setQuestion(null);
+                setWaitMessage(true);
             } else {
                 console.error("Error fetching question");
             }
@@ -41,17 +46,19 @@ export default function Quiz() {
         }
     };
 
+
     useEffect(() => {
         fetchQuestion(index);
 
-        if (!waitMessage) return; // only poll if waiting
-
         const interval = setInterval(() => {
-            fetchQuestion(index);
+            if (waitMessage) {
+                fetchQuestion(index);
+            }
         }, 8000);
 
         return () => clearInterval(interval);
     }, [index, waitMessage, roomId]);
+
 
 
 
@@ -61,6 +68,7 @@ export default function Quiz() {
             return;
         }
 
+        setSubmitting(true);
         try {
             const answerGiven = question.options[selected];
 
@@ -70,7 +78,7 @@ export default function Quiz() {
                 body: JSON.stringify({
                     roomId,
                     questionId: question.id,
-                    teamName,  // from query param or state
+                    teamName,
                     answerGiven,
                 }),
             });
@@ -84,20 +92,26 @@ export default function Quiz() {
             const data = await res.json();
             console.log("Answer submitted:", data);
 
-            // ✅ Automatically move to next question after successful submit
             setSelected(null);
             setIndex((prev) => prev + 1);
-
         } catch (err) {
             console.error("Error submitting answer:", err);
+        } finally {
+            setSubmitting(false);
         }
     };
 
 
-    const handleNext = () => {
-        setSelected(null);
-        setIndex(index + 1);
-    };
+
+    // const handleNext = () => {
+    //     setNexting(true);
+    //     setTimeout(() => {
+    //         setSelected(null);
+    //         setIndex((prev) => prev + 1);
+    //         setNexting(false);
+    //     }, 500); // just simulate small delay
+    // };
+
 
     return (
         <div className="min-h-screen bg-black flex items-center justify-center p-4">
@@ -132,17 +146,25 @@ export default function Quiz() {
                         <div className="flex gap-3">
                             <button
                                 onClick={handleSubmit}
-                                className="flex-1 bg-green-600 hover:bg-green-500 py-3 rounded-xl text-base font-semibold transition"
+                                disabled={submitting}
+                                className={`flex-1 cursor-pointer py-3 rounded-xl text-base font-semibold transition 
+            ${submitting ? "bg-gray-600 cursor-not-allowed" : "bg-green-600 hover:bg-green-500"}
+        `}
                             >
-                                Submit
+                                {submitting ? "Submitting..." : "Submit"}
                             </button>
-                            <button
+
+                            {/* <button
                                 onClick={handleNext}
-                                className="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl text-base font-semibold transition"
+                                disabled={nexting}
+                                className={`flex-1 py-3 rounded-xl text-base font-semibold transition 
+            ${nexting ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500"}
+        `}
                             >
-                                Next
-                            </button>
+                                {nexting ? "Loading..." : "Next"}
+                            </button> */}
                         </div>
+
                     </>
                 )}
             </div>
