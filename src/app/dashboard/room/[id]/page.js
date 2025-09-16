@@ -56,7 +56,7 @@ export default function RoomDashboard() {
                             alert("Error deleting room: " + (err.message || "Unknown error"));
                         }
                     } catch (error) {
-                        console.error("Error deleting room:", error);
+                        // console.error("Error deleting room:", error);
                         alert("Something went wrong.");
                     }
                 }}

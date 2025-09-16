@@ -10,7 +10,7 @@ export default function Dashboard() {
     const router = useRouter();
     const [rooms, setRooms] = useState([]);
     const handleEnterRoom = (roomId) => {
-        console.log(roomId)
+        // console.log(roomId)
         router.push(`/dashboard/room/${roomId}`);
     };
 
@@ -41,7 +41,7 @@ export default function Dashboard() {
             }
 
             const room = await res.json();
-            console.log("Room created:", room);
+            // console.log("Room created:", room);
 
             setShowDialog(false);
             setGroupName("");

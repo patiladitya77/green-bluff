@@ -23,7 +23,7 @@ export default function Home() {
     if (isCodeTrue) {
       router.push("/dashboard");
     } else {
-      console.log("Invalid creator code");
+      // console.log("Invalid creator code");
       setToast({ message: "Invalid creator code", show: true });
     }
   };
@@ -54,8 +54,12 @@ export default function Home() {
       const resTeam = await fetch("/api/participant/createteam", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamName, roomId: room.id }),
+        body: JSON.stringify({
+          teamName: teamName.trim().toLowerCase(),
+          roomId: room.id
+        }),
       });
+
 
       const team = await resTeam.json();
       if (!team.id) {
@@ -70,7 +74,7 @@ export default function Home() {
         `/quiz/${room.id}?teamId=${team.id}&teamName=${encodeURIComponent(team.name)}`
       );
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       setToast({ message: "Something went wrong. Try again.", show: true });
     } finally {
       setLoading(false);

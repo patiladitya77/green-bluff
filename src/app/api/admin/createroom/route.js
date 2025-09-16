@@ -30,7 +30,7 @@ export async function POST(req) {
 
         return NextResponse.json(room, { status: 201 });
     } catch (err) {
-        console.error("Create Room Error:", err);
+        // console.error("Create Room Error:", err);
         return NextResponse.json(
             { error: err.message || "Something went wrong" },
             { status: 500 }

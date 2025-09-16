@@ -24,7 +24,7 @@ export async function POST(req) {
 
         return NextResponse.json(newQuestion, { status: 201 });
     } catch (err) {
-        console.error("AddQuestion API Error:", err);
+        // console.error("AddQuestion API Error:", err);
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }
